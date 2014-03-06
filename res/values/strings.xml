@@ -36,6 +36,8 @@
     <string name="maxlength_desc">Maximum length of text displayed</string>
     <string name="debug">Debug</string>
     <string name="makenotification">Test Notification</string>
+    <string name="no_timeout">Ignore Timeout</string>
+    <string name="no_timeout_desc">Ignore any defined timeout</string>
     <string name="custom_title">Enter custom text</string>
     <string name="custom_description">Usage:\n\n
 %f: Full Notification\n

@@ -114,6 +114,8 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
         pref.setEnabled(tts);
         pref = findPreference(getString(R.string.pref_tts_bt_only));
         pref.setEnabled(tts);
+        pref = findPreference(getString(R.string.pref_no_timeout));
+        pref.setEnabled(tts);
     }
 
     @Override

@@ -20,4 +20,6 @@
 	<string name="pref_blacklist">blacklistentries</string>
 	
 	<string name="cat_filterlist">filterlist</string>
+
+    <string name="pref_no_timeout">no_timeout</string>
 </resources>

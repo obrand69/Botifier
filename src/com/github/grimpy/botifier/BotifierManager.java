@@ -1,9 +1,5 @@
 package com.github.grimpy.botifier;
 
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.regex.Pattern;
-
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -14,20 +10,25 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.media.MediaMetadataRetriever;
 import android.media.RemoteControlClient;
-import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.media.RemoteControlClient.MetadataEditor;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
-import android.telephony.ServiceState;
+import android.speech.tts.UtteranceProgressListener;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 
 public class BotifierManager implements OnInitListener {
@@ -167,7 +168,15 @@ public class BotifierManager implements OnInitListener {
     		Log.d(TAG, "Focus acquire " + mAudiofocus);
     	}
     }
-    
+
+    private boolean getTTS() {
+        return mSharedPref.getBoolean(_(R.string.pref_tts_enabled), false);
+    }
+
+    private boolean getTTSNoTimeout() {
+        return mSharedPref.getBoolean(_(R.string.pref_no_timeout), true);
+    }
+
 	private int getTimeout() {
 		String timeout = mSharedPref.getString(mService.getString(R.string.pref_timeout), "");
 		if (!TextUtils.isEmpty(timeout)){
@@ -227,7 +236,30 @@ public class BotifierManager implements OnInitListener {
                 mTelephonyManager.getCallState() == TelephonyManager.CALL_STATE_IDLE &&
                 (mAudioManager.isBluetoothA2dpOn() || !mSharedPref.getBoolean(_(R.string.pref_tts_bt_only), true))) {
             String txt = bot.getPreference(_(R.string.pref_tts_value), true);
-            mTTS.speak(txt, TextToSpeech.QUEUE_FLUSH, null);
+
+            HashMap<String, String> map = new HashMap<String, String>();
+            map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "Botifier");
+
+            mTTS.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                @Override
+                public void onStart(String utteranceId) {
+
+                }
+
+                @Override
+                public void onDone(String utteranceId) {
+                    //removeNotification(); // Works but sound cuts off on last word
+                    mHandler.removeMessages(HANDLER_WHAT_CLEAR);
+                    mHandler.sendEmptyMessageDelayed(HANDLER_WHAT_CLEAR, 200); // Do not abruptly stop playback
+                }
+
+                @Override
+                public void onError(String utteranceId) {
+
+                }
+            });
+
+            mTTS.speak(txt,TextToSpeech.QUEUE_FLUSH, map);
         }
     }
 	
@@ -252,7 +284,8 @@ public class BotifierManager implements OnInitListener {
         edit.putLong(MediaMetadataRetriever.METADATA_KEY_DURATION, 10);
 		edit.apply();
 		int timeout = getTimeout();
-		if (timeout != 0) {
+//
+		if (timeout != 0 && !getTTSNoTimeout()) { //Olivier
 			mHandler.removeMessages(HANDLER_WHAT_CLEAR);
 			mHandler.sendEmptyMessageDelayed(HANDLER_WHAT_CLEAR, timeout * 1000);
 		}

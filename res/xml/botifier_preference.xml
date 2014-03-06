@@ -26,7 +26,10 @@
             android:key="@string/pref_tts_bt_only"
             android:summary="@string/bt_only_desc_tts"
             android:defaultValue="true" />
-   	        
+        <CheckBoxPreference android:title="@string/no_timeout"
+            android:key="@string/pref_no_timeout"
+            android:summary="@string/no_timeout_desc"
+            android:defaultValue="true" />
 	</PreferenceScreen>
     
     <PreferenceScreen android:title="@string/metadata_display">
